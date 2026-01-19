@@ -1366,6 +1366,44 @@
                 </div>
               </div>
 
+<script>
+  let currentCount = parseInt(metricCount.textContent, 10) || 0;
+
+  submitBtn.addEventListener('click', () => {
+    const email = emailEl.value.trim();
+    const country = countryEl.value;
+    const interest = interestEl.value;
+
+    // validation minimale
+    if (!isValidEmail(email) || !country || !interest) {
+      alert("Merci de remplir correctement tous les champs.");
+      return;
+    }
+
+    // incrément logique
+    const nextCount = currentCount + 1;
+    animateCounter(metricCount, nextCount);
+    currentCount = nextCount;
+
+    // afficher toast
+    toast.classList.add('show');
+
+    // confetti 🎉
+    launchConfetti();
+
+    // reset léger
+    emailEl.value = "";
+    interestEl.value = "";
+  });
+
+  // fermeture du toast
+  document.querySelector('.toast-close')?.addEventListener('click', () => {
+    toast.classList.remove('show');
+  });
+</script>
+
+
+
               <p class="small" style="margin-top:20px; text-align:center; color:rgba(255,255,255,0.6); font-size:12px; line-height:1.5;">
                 « Une initiative de M. Chniouer Mbarak – accompagnement multimédia : Medev Partenariat Company Maroc. »
               </p>
