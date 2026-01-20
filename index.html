@@ -2420,5 +2420,85 @@ async function submitForm(data) {
 })();
 </script>
 
+<script>
+/**
+ * Point 1: compteur robuste (non bloquant, timeout, retry, fallback).
+ * - Tente /count puis /api/count (au cas où)
+ * - Timeout 6000ms
+ * - 1 retry si échec
+ * - Fallback: valeur affichée + cache localStorage
+ */
+(function(){
+  const metricEl = document.getElementById('metricCount');
+  if (!metricEl) return;
+
+  // Mets ici l'URL Render de TON API (celle de ton Web Service Render)
+  // Exemple: https://initiatives-citoyennes-2026-api-1.onrender.com
+  const API_BASE = "https://initiatives-citoyennes-2026-api-1.onrender.com";
+
+  const endpoints = [
+    API_BASE.replace(/\/+$/, '') + "/count",
+    API_BASE.replace(/\/+$/, '') + "/api/count"
+  ];
+
+  const CACHE_KEY = "ic_preinscrits_count";
+  const initial = parseInt(metricEl.textContent, 10);
+  const cached = parseInt(localStorage.getItem(CACHE_KEY) || "", 10);
+
+  // Fallback immédiat (n'empêche jamais l'affichage)
+  if (!Number.isNaN(cached) && (Number.isNaN(initial) || cached > initial)) {
+    metricEl.textContent = String(cached);
+  }
+
+  async function fetchWithTimeout(url, ms){
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try{
+      const res = await fetch(url, { method: "GET", cache: "no-store", signal: ctrl.signal });
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      if(!data || typeof data.count !== "number") throw new Error("Bad JSON");
+      return data.count;
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  async function refreshCount(){
+    // 1ère passe
+    for (const url of endpoints){
+      try{
+        const n = await fetchWithTimeout(url, 6000);
+        metricEl.textContent = String(n);
+        localStorage.setItem(CACHE_KEY, String(n));
+        return;
+      } catch(e) {}
+    }
+
+    // Retry 1 fois (Render cold start)
+    await new Promise(r => setTimeout(r, 1200));
+
+    for (const url of endpoints){
+      try{
+        const n = await fetchWithTimeout(url, 6000);
+        metricEl.textContent = String(n);
+        localStorage.setItem(CACHE_KEY, String(n));
+        return;
+      } catch(e) {}
+    }
+    // Si on arrive ici: on laisse la valeur affichée (fallback)
+  }
+
+  // Non bloquant
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => { refreshCount(); });
+  } else {
+    refreshCount();
+  }
+})();
+</script>
+
+
+
 </body>
 </html>
