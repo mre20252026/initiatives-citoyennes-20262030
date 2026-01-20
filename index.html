@@ -1351,6 +1351,15 @@
 </div>
 
 
+
+              <div class="compteur">
+  <strong>Pré-inscriptions :</strong>
+  <span id="global-count">0</span>
+</div>
+  
+
+
+
               <div class="metrics-bar">
                 <div class="metric">
                   <div class="metric-value" id="metricCount">17</div>
@@ -1367,45 +1376,127 @@
               </div>
 
 <script>
-  let currentCount = parseInt(metricCount.textContent, 10) || 0;
+(function () {
+  // 1) API Render (prod)
+  const API_BASE = "https://initiatives-citoyennes-2026-api-1.onrender.com";
 
-  submitBtn.addEventListener('click', () => {
-    const email = emailEl.value.trim();
-    const country = countryEl.value;
-    const interest = interestEl.value;
+  // 2) Règle de cohérence A + B = C
+  const V1_PRIORITY_COUNTRIES = 10;
 
-    // validation minimale
-    if (!isValidEmail(email) || !country || !interest) {
+  // 3) Récupération des éléments
+  const elGlobal = document.getElementById("global-count");
+  const elTotal  = document.getElementById("metricCount");
+  const elA      = document.getElementById("metricCountries");
+  const elB      = document.getElementById("metricGroups");
+
+  // Champs formulaire (adapte si tes IDs sont différents)
+  const emailEL    = document.getElementById("email") || document.querySelector('input[type="email"]');
+  const countryEL  = document.getElementById("country") || document.querySelector('select[name="country"], select');
+  const interestEL = document.getElementById("interest") || document.querySelector('select[name="interest"], textarea, input[name="interest"]');
+
+  const submitBtn = document.getElementById("submitBtn") || document.querySelector('button[type="submit"], button');
+
+  // Toast / confetti (si tu les as déjà)
+  const toast = document.querySelector(".toast") || document.getElementById("toast");
+  const toastClose = document.querySelector(".toast-close") || document.getElementById("toast-close");
+
+  function setText(el, value) {
+    if (el) el.textContent = String(value);
+  }
+
+  async function fetchCount() {
+    const r = await fetch(`${API_BASE}/count`, { cache: "no-store" });
+    if (!r.ok) throw new Error("count http " + r.status);
+    const data = await r.json();
+    return Number(data.count || 0);
+  }
+
+  async function refreshCounts() {
+    try {
+      const total = await fetchCount();
+
+      // C
+      setText(elGlobal, total);
+      setText(elTotal, total);
+
+      // A et B pour garantir A+B=C
+      const a = Math.min(V1_PRIORITY_COUNTRIES, total);
+      const b = Math.max(0, total - a);
+
+      setText(elA, a);
+      setText(elB, b);
+    } catch (e) {
+      console.warn("refreshCounts failed:", e);
+      // On ne casse pas l’UI si Render dort 50s en free tier
+    }
+  }
+
+  // --------- SUBMIT (API /signup) ----------
+  async function submitSignup(event) {
+    if (event) event.preventDefault();
+
+    const email = (emailEL && emailEL.value ? emailEL.value.trim() : "");
+    const country = (countryEL && countryEL.value ? countryEL.value : "");
+    const interest = (interestEL && interestEL.value ? interestEL.value : "");
+
+    // validation minimale (même logique que ton script)
+    if (!email || !country || !interest) {
       alert("Merci de remplir correctement tous les champs.");
       return;
     }
 
-    // incrément logique
-    const nextCount = currentCount + 1;
-    animateCounter(metricCount, nextCount);
-    currentCount = nextCount;
+    // POST /signup
+    const r = await fetch(`${API_BASE}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, country, interest })
+    });
 
-    // afficher toast
-    toast.classList.add('show');
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      alert("Erreur d’inscription. " + txt);
+      return;
+    }
 
-    // confetti 🎉
-    launchConfetti();
+    // feedback (toast + confetti si existants)
+    try {
+      if (toast) toast.classList.add("show");
+      if (typeof window.launchConfetti === "function") window.launchConfetti();
+    } catch (_) {}
 
-    // reset léger
-    emailEl.value = "";
-    interestEl.value = "";
-  });
+    // reset champs
+    if (emailEL) emailEL.value = "";
+    if (interestEL) interestEL.value = "";
 
-  // fermeture du toast
-  document.querySelector('.toast-close')?.addEventListener('click', () => {
-    toast.classList.remove('show');
-  });
+    // relire la DB et mettre à jour tous les compteurs
+    await refreshCounts();
+  }
+
+  // Exposer la fonction si ton HTML utilise onsubmit="submitSignup(event)"
+  window.submitSignup = submitSignup;
+
+  // Si tu utilisais le click bouton
+  if (submitBtn) {
+    submitBtn.addEventListener("click", submitSignup);
+  }
+
+  if (toastClose && toast) {
+    toastClose.addEventListener("click", () => toast.classList.remove("show"));
+  }
+
+  // Au chargement : synchronise tout depuis l’API
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", refreshCounts);
+  } else {
+    refreshCounts();
+  }
+})();
 </script>
 
 
 
               <p class="small" style="margin-top:20px; text-align:center; color:rgba(255,255,255,0.6); font-size:12px; line-height:1.5;">
-                « Une initiative de M. Chniouer Mbarak – accompagnement multimédia : Medev Partenariat Company Maroc. »
+                « Multimédia : Medev Partenariat Company Maroc »
               </p>
             </div>
           </div>
@@ -2498,6 +2589,60 @@ async function submitForm(data) {
 })();
 </script>
 
+<script>
+/* =========================================================
+   CONFIG API – Initiatives Citoyennes 2026
+   ========================================================= */
+
+const API_BASE_URL = "https://initiatives-citoyennes-2026-api-1.onrender.com";
+
+/* === Récupérer le compteur global === */
+async function refreshCount() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/count`);
+    const data = await res.json();
+
+    const el = document.getElementById("global-count");
+    if (el) {
+      el.textContent = data.count;
+    }
+  } catch (err) {
+    console.error("Erreur compteur :", err);
+  }
+}
+
+/* === Inscription utilisateur === */
+async function submitSignup(event) {
+  event.preventDefault();
+
+  const emailInput = document.getElementById("email");
+  if (!emailInput || !emailInput.value) {
+    alert("Email requis");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/signup`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: emailInput.value })
+    });
+
+    if (!res.ok) throw new Error("Erreur API");
+
+    alert("Inscription enregistrée ✅");
+    emailInput.value = "";
+    refreshCount();
+
+  } catch (err) {
+    alert("Erreur lors de l’inscription");
+    console.error(err);
+  }
+}
+
+/* === Auto-load === */
+document.addEventListener("DOMContentLoaded", refreshCount);
+</script>
 
 
 </body>
