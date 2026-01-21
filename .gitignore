@@ -1,0 +1,6 @@
+*.bak*
+*.diff
+*.patch
+patch_*.sh
+PATCH_README.md
+phrase_complete_syntaxe.md
