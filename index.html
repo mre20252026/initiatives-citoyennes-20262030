@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
@@ -382,7 +382,7 @@
       color: transparent;
     }
 
-    .landing-subtitle { color: var(--text-secondary); max-width: 860px; text-align: center; }
+    .landing-subtitle { color: var(--text-secondary); max-width: 840px; text-align: center; margin: 0 auto; }
 
     .form-wrapper {
       margin-top: 18px;
@@ -741,8 +741,11 @@
     #landing .landing-card,
     #landing .form-card,
     #landing .card,
-    #landing .landing-form {
-      max-width: 420px !important;   /* même gabarit que la carte accueil */
+    #landing .landing-form,
+    #landing .landing-hero,
+    #landing .landing-content,
+    #landing .form-wrapper {
+      max-width: 840px !important;
       width: 100% !important;
       margin: 0 auto !important;
       border-radius: 18px !important;
@@ -750,7 +753,7 @@
 
     /* On garde les infos, mais on évite que le titre prenne toute la largeur écran */
     #landing h1, #landing h2, #landing .title, #landing .headline {
-      max-width: 420px !important;
+      max-width: 840px !important;
       margin-left: auto !important;
       margin-right: auto !important;
       text-align: left;
@@ -762,6 +765,9 @@
       #landing .form-card,
       #landing .card,
       #landing .landing-form,
+      #landing .landing-hero,
+      #landing .landing-content,
+      #landing .form-wrapper,
       #landing h1, #landing h2, #landing .title, #landing .headline {
         max-width: 100% !important;
       }
@@ -1040,7 +1046,7 @@
 #landingSubtitle{
   display:block;
   width:100%;
-  max-width:860px;
+  max-width:840px;
   margin:0 auto;
   text-align:center !important;
 }
