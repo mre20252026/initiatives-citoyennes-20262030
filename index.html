@@ -2767,5 +2767,70 @@ document.addEventListener("DOMContentLoaded", refreshCount);
 })();
 </script>
 
+
+<script>
+;(() => {
+  // icCloseOverlayPatch: restaure la croix (X) -> fermeture overlay/modale (pas fermeture onglet)
+  function hideEl(el){
+    if (!el) return;
+    el.style.display = "none";
+    el.setAttribute("aria-hidden","true");
+    el.classList.remove("open","active","show","visible");
+  }
+
+  function closestOverlay(el){
+    if (!el) return null;
+    return el.closest(
+      '.modal, .overlay, .popup, .dialog, .drawer, .sheet, ' +
+      '[role="dialog"], [aria-modal="true"], ' +
+      '.login-overlay, .login-modal, .exit-overlay, .exit-modal'
+    );
+  }
+
+  function closeAnyOverlayFrom(el){
+    const ov = closestOverlay(el);
+    if (ov) { hideEl(ov); return true; }
+
+    // fallback: si pas de conteneur trouvé, tente de fermer les overlays visibles connus
+    const candidates = document.querySelectorAll(
+      '.modal.open, .modal.show, .overlay.open, .overlay.show, .popup.open, .popup.show, ' +
+      '[role="dialog"][aria-hidden="false"], [aria-modal="true"]'
+    );
+    for (const c of candidates) { hideEl(c); return true; }
+    return false;
+  }
+
+  // 1) Click sur toute "croix" probable
+  document.addEventListener("click", (e) => {
+    const t = e.target;
+    const btn = t && t.closest && t.closest(
+      '[data-close], [data-dismiss], .close, .btn-close, .modal-close, .overlay-close, .popup-close, ' +
+      '[aria-label="Fermer"], [aria-label="Close"], [title="Fermer"], [title="Close"], ' +
+      '.fa-times, .fa-xmark'
+    );
+    if (!btn) return;
+
+    // Empêche des actions type window.close / navigation
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Ferme l'overlay
+    closeAnyOverlayFrom(btn);
+  }, true);
+
+  // 2) ESC pour fermer un overlay visible
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    // ferme le premier overlay/dialog visible
+    const d = document.querySelector(
+      '.modal.open, .modal.show, .overlay.open, .overlay.show, .popup.open, .popup.show, ' +
+      '[role="dialog"][aria-hidden="false"], [aria-modal="true"]'
+    );
+    if (d) hideEl(d);
+  });
+
+})();
+</script>
+
 </body>
 </html>
