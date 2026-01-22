@@ -1371,7 +1371,7 @@
                   <div class="metric-label" id="kpiPreLabel"><span id="kpiPreLabel">Pré-inscrits</span></div>
                 </div>
                 <div class="metric">
-                  <div class="metric-label" id="kpiCountriesLabel"><span id="kpiCountriesLabel">MRE (tous pays) · Communautés partenaires internationales
+                  <div class="metric-label" id="kpiCountriesLabel"><span>MRE (tous pays) · Communautés partenaires internationales
 <div class="conference-note" id="conferencePrep"></div>
 </span></div>
                 </div>
@@ -1408,28 +1408,24 @@
   }
 
   async function fetchCounts() {
-    // Essayer d'abord le nouvel endpoint /counts qui retourne les compteurs séparés
+    // Utiliser directement /count (endpoint disponible)
+    // Note: /counts n'existe pas (404), utiliser uniquement /count
+    // Updated: 2026-01-21 - Removed /counts endpoint call
     try {
-      const r = await fetch(`${API_BASE}/counts`, { cache: "no-store" });
-      if (r.ok) {
-        const data = await r.json();
-        return {
-          total: Number(data.total || 0),
-          v1: Number(data.v1 || 0),
-          mre: Number(data.mre || 0)
-        };
-      }
+      const r = await fetch(`${API_BASE}/count`, { 
+        cache: "no-store",
+        method: "GET"
+      });
+      if (!r.ok) throw new Error("count http " + r.status);
+      const data = await r.json();
+      const total = Number(data.count || 0);
+      // Retourner le total (v1 et mre ne sont plus utilisés dans l'UI)
+      return { total, v1: 0, mre: 0 };
     } catch (e) {
-      console.warn("Failed to fetch /counts, falling back to /count", e);
+      console.warn("Failed to fetch /count:", e);
+      // Retourner des valeurs par défaut en cas d'erreur
+      return { total: 0, v1: 0, mre: 0 };
     }
-
-    // Fallback sur /count si /counts n'est pas disponible
-    const r = await fetch(`${API_BASE}/count`, { cache: "no-store" });
-    if (!r.ok) throw new Error("count http " + r.status);
-    const data = await r.json();
-    const total = Number(data.count || 0);
-    // Si on n'a que le total, on ne peut pas calculer v1/mre, donc on retourne seulement le total
-    return { total, v1: 0, mre: 0 };
   }
 
   async function refreshCounts() {
