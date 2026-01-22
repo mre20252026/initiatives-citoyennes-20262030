@@ -1,4 +1,4 @@
-# Initiatives Citoyennes 2026 — Frontend
+# Initiatives Citoyennes 2026 — Frontend 
 
 Landing page officielle de l’initiative citoyenne « Initiatives Citoyennes 2026 ».
 Ce site permet la consultation du projet et l’inscription des participants, avec un compteur dynamique connecté à une API sécurisée.
