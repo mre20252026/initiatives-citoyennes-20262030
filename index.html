@@ -1523,15 +1523,6 @@
 }
 
 // --- Conference note updater (single source of truth) ---
-window.updateConferencePrep = function(lang){
-  try {
-    const L = (window.I18N && (window.I18N[lang] || window.I18N.fr)) || {};
-    if (typeof setText === "function") setText("conferencePrep", L.conference_prep || "");
-  } catch (e) {
-    // silent fail to avoid breaking UX
-  }
-};
-
 )();
 </script>
 
@@ -2760,6 +2751,21 @@ document.addEventListener("DOMContentLoaded", refreshCount);
 </script>
 
 
+
+
+<script>
+;(() => {
+  // updateConferencePrep: définition sûre (fin de document)
+  window.updateConferencePrep = function(lang){
+    const L = (window.I18N && (window.I18N[lang] || window.I18N.fr)) || {};
+    if (typeof window.setText === "function") window.setText("conferencePrep", L.conference_prep || "");
+    else {
+      const el = document.getElementById("conferencePrep");
+      if (el) el.textContent = L.conference_prep || "";
+    }
+  };
+})();
+</script>
 
 </body>
 </html>
