@@ -1310,6 +1310,41 @@
   padding:2px 0 !important;
 }
 </style>
+
+<style id="ui-visibility-patch">
+/* =========================
+   PATCH LISIBILITÉ UI
+   ========================= */
+
+/* 1️⃣ Augmentation globale de la taille de police (+1px) */
+html {
+  font-size: calc(100% + 1px);
+}
+
+/* 2️⃣ Champ email : lisibilité équivalente au champ Pays */
+input[type="email"],
+.ic-input-email,
+#email,
+.email-input {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  font-size: 1em;
+}
+
+/* Placeholder email plus lisible */
+input[type="email"]::placeholder {
+  color: #6b7280 !important; /* gris lisible */
+  opacity: 1;
+}
+
+/* Focus cohérent avec le reste du formulaire */
+input[type="email"]:focus {
+  outline: none;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+}
+</style>
+
 </head>
 
 <body>
