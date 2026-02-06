@@ -12,3 +12,8 @@ phrase_complete_syntaxe.md
 \r.pub
 __pycache__/
 *.log
+# Local artifacts / noise
+*.bak
+*.backup
+\r
+\r.pub
