@@ -4,3 +4,11 @@
 patch_*.sh
 PATCH_README.md
 phrase_complete_syntaxe.md
+# Noise / local artifacts
+*.bak
+*.backup
+*.pub
+\r
+\r.pub
+__pycache__/
+*.log
